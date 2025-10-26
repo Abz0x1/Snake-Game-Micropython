@@ -1,0 +1,101 @@
+from kepoco import display, buttonU, buttonD, buttonL, buttonR, buttonB
+from random import randrange
+
+# The Games MODEL
+
+# Game State Information
+
+direction = "U"
+
+snake_segments = [
+    (35, 20),
+    (35, 21),
+    (35, 22)
+]
+
+apple = (10, 10)
+
+# Some support functions that are part of the MODEL
+
+def is_collision(position, body_parts):
+    for body_part in body_parts:
+        if position==body_part:
+            return True
+    return False
+
+def generate_new_apple(snake):
+    new_location = (randrange(display.width), randrange(display.height))
+    while is_collision(new_location, snake):
+        new_location = (randrange(display.width), randrange(display.height))
+    return new_location
+
+# Setup up display (VIEW)
+
+display.setFPS(5)
+display.fill(display.BLACK)
+display.enableGrayscale()
+
+display.setPixel(apple[0], apple[1], display.WHITE)
+display.setPixel(snake_segments[0][0], snake_segments[0][1], display.LIGHTGRAY)
+
+# Main loop (cycles the CONTROLLER, then the MODEL's main step,
+# and finally the current VIEW)
+
+while not buttonB.pressed():
+    
+    # CONTROLLER - Input to the game
+    
+    # has a button been pressed?
+    if buttonU.justPressed() and direction != "D":
+        direction = "U"
+    if buttonD.justPressed() and direction != "U":
+        direction = "D"
+    if buttonL.justPressed() and direction != "R":
+        direction = "L"
+    if buttonR.justPressed() and direction != "L":
+        direction = "R"
+    # if nothing was press,
+        # the 'direction' variable remains unchaged each cycle.
+    
+    # MODEL - Progress the game to the next step
+    
+    snake_head = snake_segments[0]
+    snake_head_x, snake_head_y = snake_head
+
+    # TASK - MODEL: Write your snake game logic here
+    if direction == 'U':
+        new_snake_head = (snake_head_x, snake_head_y-1)
+    if direction == 'D':
+        new_snake_head = (snake_head_x, snake_head_y+1)
+    if direction == 'R':
+        new_snake_head = (snake_head_x+1, snake_head_y)
+    if direction == 'L':
+        new_snake_head = (snake_head_x-1, snake_head_y)
+    
+    if is_collision(new_snake_head,snake_segments):#if new head is at the same place as one of the coordinates on the list it will end game
+        display.drawText("GAME OVER", 14, 17, display.WHITE)
+        display.update()
+        break
+    
+    snake_segments.insert(0, new_snake_head) #adds new coordinates to list
+    
+    if new_snake_head == apple:
+        apple = generate_new_apple(snake_segments) #increase length when eaten
+    else:
+        snake_segments.pop() #if apple is not eaten it removes last coordinates to keep same length
+        
+    
+    
+    # VIEW - Draw the current view of the model
+    
+    display.fill(display.BLACK)
+    
+    # TASK - DRAW: Draw the apple and the snake
+    apple_x, apple_y = apple #unpacks the original starting coordinates
+    display.setPixel(apple_x, apple_y, display.WHITE) #subsequent coordinates generated are all random
+    
+    for (x, y) in snake_segments:
+        display.setPixel(x,y,display.WHITE)
+        
+    
+    display.update()
